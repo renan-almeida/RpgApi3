@@ -26,7 +26,22 @@ namespace RpgApi.Controllers
         {
             try
             {
-                Personagem p = await _context.TB_PERSONAGENS.FirstOrDefaultAsync(pBusca => pBusca.Id == id);
+              /*  Personagem p = await _context.TB_PERSONAGENS
+                  .Include(ar => ar.Arma)
+                .Include(us => us.Usuario)
+                .Include(p => p.PersonagemHabilidades)
+                    .ThenInclude(ps => ps.Habilidade)
+                .FirstOrDefaultAsync(pBusca => pBusca.Id == id)*/
+
+                 Personagem? p = await _context.TB_PERSONAGENS
+                .Include(ar => ar.Arma)
+                .Include(us => us.Usuario)
+                .Include(p => p.PersonagemHabilidades)
+                    .ThenInclude(ps => ps.Habilidade)
+                .FirstOrDefaultAsync(pBusca => pBusca.Id == id);
+
+                return Ok(p);
+                
 
                 return Ok(p);
             }
@@ -108,6 +123,25 @@ namespace RpgApi.Controllers
                 return BadRequest(ex.Message + " - " + ex.InnerException);
             }
         }
-        
+        [HttpPost("DeletePersonagemHabilidade")]
+        public async Task<IActionResult> DeleteAsync(PersonagemHabilidade ph)
+        {
+            try
+            {
+               PersonagemHabilidade? phRemover = await _context.TB_PERSONAGEM_HABILIDADES
+                    .FirstOrDefaultAsync(phBusca => phBusca.PersonagemId == ph.PersonagemId
+                     && phBusca.HabilidadeId == ph.HabilidadeId);
+                if(phRemover == null)
+                    throw new System.Exception("Personagem ou Habilidade não encontrados");
+
+                _context.TB_PERSONAGEM_HABILIDADES.Remove(phRemover);
+                int linhasAfetadas = await _context.SaveChangesAsync();
+                return Ok(linhasAfetadas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
